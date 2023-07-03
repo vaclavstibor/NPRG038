@@ -1,261 +1,184 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Reflection;
 using System.Linq.Expressions;
-using System.Reflection;
 
-namespace LinqToMinimalSql
-{
-    class SqlTable<T> : IEnumerable<T> where T : new()
-    {
-        // Client side data:
-        FieldInfo[] columnFields;
+namespace LinqToMinimalSql {
 
-        internal readonly Dictionary<string, string> FieldNameToColumnNameMap = new Dictionary<string, string>();
+	class SqlTable<T> : IEnumerable<T> where T : new() {
+		// Client side data:
+		FieldInfo[] columnFields;
 
-        // DB server side data:
-        string[] columnNames;
-        string[][] data;
+		internal readonly Dictionary<string, string> FieldNameToColumnNameMap = new Dictionary<string, string>();
 
-        public SqlTable(string[] columnNames, string[][] data)
-        {
-            this.columnNames = columnNames;
-            this.data = data;
+		// DB server side data:
+		string[] columnNames;
+		string[][] data;
 
-            var fieldInfos = typeof(T).GetFields();
+		public SqlTable(string[] columnNames, string[][] data) {
+			this.columnNames = columnNames;
+			this.data = data;
 
-            columnFields = new FieldInfo[columnNames.Length];
-            for (int i = 0; i < columnFields.Length; i++)
-            {
-                columnFields[i] = FindFieldInfoForDatabaseColumn(columnNames[i], fieldInfos);
-                FieldNameToColumnNameMap.Add(columnFields[i].Name, columnNames[i]);
-            }
-        }
+			var fieldInfos = typeof(T).GetFields();
 
-        private static FieldInfo FindFieldInfoForDatabaseColumn(string columnName, FieldInfo[] fieldInfos)
-        {
-            columnName = new string(columnName.Where(c => c != '_').ToArray());
+			columnFields = new FieldInfo[columnNames.Length];
+			for (int i = 0; i < columnFields.Length; i++) {
+				columnFields[i] = FindFieldInfoForDatabaseColumn(columnNames[i], fieldInfos);
+				FieldNameToColumnNameMap.Add(columnFields[i].Name, columnNames[i]);
+			}
+		}
 
-            foreach (var fi in fieldInfos)
-            {
-                if (StringComparer.InvariantCultureIgnoreCase.Compare(fi.Name, columnName) == 0)
-                {
-                    return fi;
-                }
-            }
+		private static FieldInfo FindFieldInfoForDatabaseColumn(string columnName, FieldInfo[] fieldInfos) {
+			columnName = new string(columnName.Where(c => c != '_').ToArray());
 
-            return null;
-        }
+			foreach (var fi in fieldInfos) {
+				if (StringComparer.InvariantCultureIgnoreCase.Compare(fi.Name, columnName) == 0) {
+					return fi;
+				}
+			}
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            Console.WriteLine("  + SqlTable<{0}>.GetEnumerator() called ...", typeof(T).Name);
+			return null;
+		}
 
-            foreach (var t in FilteredView(null))
-            {
-                Console.WriteLine("  + SqlTable<{0}>.Enumerator.MoveNext() called, .Current <- {1} ...", typeof(T).Name, t);
-                yield return t;
-            }
+		public IEnumerator<T> GetEnumerator() {
+			Console.WriteLine("  + SqlTable<{0}>.GetEnumerator() called ...", typeof(T).Name);
 
-            Console.WriteLine("  + SqlTable<{0}>.GetEnumerator() finished ...", typeof(T).Name);
-        }
+			foreach (var t in FilteredView(null)) {
+				Console.WriteLine("  + SqlTable<{0}>.Enumerator.MoveNext() called, .Current <- {1} ...", typeof(T).Name, t);
+				yield return t;
+			}
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+			Console.WriteLine("  + SqlTable<{0}>.GetEnumerator() finished ...", typeof(T).Name);
+		}
 
-        //
-        //
-        //
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+			return GetEnumerator();
+		}
 
-        #region DB server query execution engine (simulates a remote database server)
-        public class SqlWhereClause
-        {
-            public string ColumnName;
-            public bool CompareOnEquality;
-            public string Value;
-        }
+		//
+		//
+		//
 
-        private bool CheckRowSatisfiesWhere(string[] row, SqlWhereClause where)
-        {
-            int columnIdx = Array.IndexOf(columnNames, where.ColumnName);
+	#region DB server query execution engine (simulates a remote database server)
 
-            Console.WriteLine("DB server (i.e. SqlTable<T>) testing condition: WHERE {0} {1} {2} for {3}", where.ColumnName, where.CompareOnEquality ? "=" : "<>", where.Value, row[columnIdx]);
+		public class SqlWhereClause {
+			public string ColumnName;
+			public bool CompareOnEquality;
+			public string Value;
+		}
 
-            return (row[columnIdx] == where.Value) ^ (!where.CompareOnEquality);
-        }
+		private bool CheckRowSatisfiesWhere(string[] row, SqlWhereClause where) {
+			int columnIdx = Array.IndexOf(columnNames, where.ColumnName);
 
-        private IEnumerable<string[]> GetFilteredViewLazyResultSet(List<SqlWhereClause> whereClauses)
-        {
-            Console.WriteLine("DB server received a query and starting its execution ...");
-            foreach (string[] row in data)
-            {
-                bool processRow = true;
+			Console.WriteLine("DB server (i.e. SqlTable<T>) testing condition: WHERE {0} {1} {2} for {3}", where.ColumnName, where.CompareOnEquality ? "=" : "<>", where.Value, row[columnIdx]);
 
-                if (whereClauses != null)
-                {
-                    foreach (var where in whereClauses)
-                    {
-                        processRow = CheckRowSatisfiesWhere(row, where);
-                        if (!processRow) break;
-                    }
-                }
+			return (row[columnIdx] == where.Value) ^ (!where.CompareOnEquality);
+		}
 
-                if (processRow)
-                {
-                    yield return row;
-                }
-            }
-            Console.WriteLine("DB server completed query execution ...");
-        }
+		private IEnumerable<string[]> GetFilteredViewLazyResultSet(List<SqlWhereClause> whereClauses) {
+			Console.WriteLine("DB server received a query and starting its execution ..."); 
+			foreach (string[] row in data) {
+				bool processRow = true;
 
-        #endregion
+				if (whereClauses != null) {
+					foreach (var where in whereClauses) {
+						processRow = CheckRowSatisfiesWhere(row, where);
+						if (!processRow) break;
+					}
+				}
 
-        public IEnumerable<T> FilteredView(List<SqlWhereClause> whereClauses)
-        {
-            var lazyResultSet = GetFilteredViewLazyResultSet(whereClauses);
+				if (processRow) {
+					yield return row;
+				}
+			}
+			Console.WriteLine("DB server completed query execution ..."); 
+		}
 
-            foreach (string[] row in lazyResultSet)
-            {
-                T t = new T();
+	#endregion
 
-                for (int i = 0; i < row.Length; i++)
-                {
-                    columnFields[i].SetValue(t, row[i]);
-                }
+		public IEnumerable<T> FilteredView(List<SqlWhereClause> whereClauses) {
+			var lazyResultSet = GetFilteredViewLazyResultSet(whereClauses);
 
-                yield return t;
-            }
-        }
+			foreach (string[] row in lazyResultSet) {				
+				T t = new T();
 
-        #region Actual LINQ to Minimal SQL implementation
+				for (int i = 0; i < row.Length; i++) {
+					columnFields[i].SetValue(t, row[i]);
+				}
 
-        public IEnumerable<T> Where(Expression<Func<T, bool>> predicate)
-        {
-            var visitor = new SqlWhereExpressionVisitor(this.FieldNameToColumnNameMap);
-            visitor.Visit(predicate);
-            var whereClauses = visitor.GetWhereClauses();
-            return FilteredView(whereClauses);
-        }
+				yield return t;
+			}
+		}
 
-        public class SqlWhereExpressionVisitor : ExpressionVisitor
-        {
-            private readonly Dictionary<string, string> fieldNameToColumnNameMap;
-            private List<SqlWhereClause> whereClauses;
+		#region Actual LINQ to Minimal SQL implementation
 
-            public SqlWhereExpressionVisitor(Dictionary<string, string> fieldNameToColumnNameMap)
-            {
-                this.fieldNameToColumnNameMap = fieldNameToColumnNameMap;
-                whereClauses = new List<SqlWhereClause>();
-            }
+		//
+		// LINQ to Minimal SQL implementation begins here:
+		//
 
-            public List<SqlWhereClause> GetWhereClauses()
-            {
-                return whereClauses;
-            }
+	}
 
-            protected override Expression VisitBinary(BinaryExpression node)
-            {
-                if (node.NodeType == ExpressionType.Equal)
-                {
-                    if (node.Left.NodeType == ExpressionType.MemberAccess && node.Right.NodeType == ExpressionType.Constant)
-                    {
-                        var memberExpr = (MemberExpression)node.Left;
-                        var constantExpr = (ConstantExpression)node.Right;
+		#endregion
 
-                        if (memberExpr.Expression.NodeType == ExpressionType.Parameter)
-                        {
-                            var columnName = fieldNameToColumnNameMap[memberExpr.Member.Name];
-                            var compareOnEquality = node.NodeType == ExpressionType.Equal;
-                            var value = constantExpr.Value.ToString();
+	class Person {
+		public string FirstName;
+		public string LastName;
 
-                            var whereClause = new SqlWhereClause
-                            {
-                                ColumnName = columnName,
-                                CompareOnEquality = compareOnEquality,
-                                Value = value
-                            };
+		public override string ToString() {
+ 			return string.Format("Person(FirstName = {0}, LastName = {1})", FirstName, LastName);
+		}
+	}
 
-                            whereClauses.Add(whereClause);
-                        }
-                    }
-                }
+	class Program {
+		static void Main(string[] args) {
+			string[] columns = { "LAST_NAME", "FIRST_NAME" };
+			string[][] data = {
+								  new [] { "Jezek", "Pavel" },
+								  new [] { "Kofron", "Jan" },
+								  new [] { "Jezek", "Ota" },
+								  new [] { "Vesely", "Jiri" },
+								  new [] { "Adamek", "Jiri" },
+								  new [] { "Vesely", "Petr" },
+								  new [] { "Humpolicek", "Jiri" }
+							  };
 
-                return base.VisitBinary(node);
-            }
-        }
+			SqlTable<Person> persons = new SqlTable<Person>(columns, data);
 
-        #endregion
-    }
+			Console.WriteLine("Create query for LINQ to Objects ...");
+			var q = from p in persons orderby p.LastName where p.FirstName == "Jiri" select p;
 
-    class Person
-    {
-        public string FirstName;
-        public string LastName;
+			Console.WriteLine("LINQ to Objects:");
+			foreach (var p in q) {
+				Console.WriteLine("\t{0}", p);
+			}
+			Console.WriteLine();
 
-        public override string ToString()
-        {
-            return string.Format("Person(FirstName = {0}, LastName = {1})", FirstName, LastName);
-        }
-    }
+			//
+			//
+			//
 
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            string[] columns = { "LAST_NAME", "FIRST_NAME" };
-            string[][] data = {
-                                  new [] { "Jezek", "Pavel" },
-                                  new [] { "Kofron", "Jan" },
-                                  new [] { "Jezek", "Ota" },
-                                  new [] { "Vesely", "Jiri" },
-                                  new [] { "Adamek", "Jiri" },
-                                  new [] { "Vesely", "Petr" },
-                                  new [] { "Humpolicek", "Jiri" }
-                              };
+			Console.WriteLine("Create query for FilteredView ...");
+			var filter = new List<SqlTable<Person>.SqlWhereClause>();
+			filter.Add(new SqlTable<Person>.SqlWhereClause { ColumnName = "FIRST_NAME", CompareOnEquality = true, Value = "Jiri" });
+			filter.Add(new SqlTable<Person>.SqlWhereClause { ColumnName = "LAST_NAME", CompareOnEquality = false, Value = "Adamek" });
 
-            SqlTable<Person> persons = new SqlTable<Person>(columns, data);
+			Console.WriteLine("FilteredView:");
+			foreach (var p in persons.FilteredView(filter)) {
+				Console.WriteLine("\t{0}", p);
+			}
+			Console.WriteLine();
 
-            Console.WriteLine("Create query for LINQ to Objects ...");
-            var q = from p in persons orderby p.LastName where p.FirstName == "Jiri" select p;
+			//
+			//
+			//
 
-            Console.WriteLine("LINQ to Objects:");
-            foreach (var p in q)
-            {
-                Console.WriteLine("\t{0}", p);
-            }
-            Console.WriteLine();
+			Console.WriteLine("Create query for LINQ to Minimal SQL ...");
+			var q3 = from p in persons where p.FirstName == "Jiri" where p.LastName != "Adamek" select p;
 
-            //
-            //
-            //
-
-            Console.WriteLine("Create query for FilteredView ...");
-            var filter = new List<SqlTable<Person>.SqlWhereClause>();
-            filter.Add(new SqlTable<Person>.SqlWhereClause { ColumnName = "FIRST_NAME", CompareOnEquality = true, Value = "Jiri" });
-            filter.Add(new SqlTable<Person>.SqlWhereClause { ColumnName = "LAST_NAME", CompareOnEquality = false, Value = "Adamek" });
-
-            Console.WriteLine("FilteredView:");
-            foreach (var p in persons.FilteredView(filter))
-            {
-                Console.WriteLine("\t{0}", p);
-            }
-            Console.WriteLine();
-
-            //
-            //
-            //
-
-            Console.WriteLine("Create query for LINQ to Minimal SQL ...");
-            var q3 = from p in persons where p.FirstName == "Jiri" where p.LastName != "Adamek" select p;
-
-            Console.WriteLine("LINQ to Minimal SQL:");
-            foreach (var p in q3)
-            {
-                Console.WriteLine("\t{0}", p);
-            }
-            Console.WriteLine();
-
-        }
-    }
+			Console.WriteLine("LINQ to Minimal SQL:");
+			foreach (var p in q3) {
+				Console.WriteLine("\t{0}", p);
+			}
+			Console.WriteLine();
+			
+		}
+	}
 }
