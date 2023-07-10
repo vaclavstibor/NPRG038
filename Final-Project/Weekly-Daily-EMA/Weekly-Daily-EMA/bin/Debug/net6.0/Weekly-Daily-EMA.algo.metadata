@@ -1,0 +1,154 @@
+[
+  {
+    "Flags": "Robot",
+    "Guid": "00000000-0000-0000-0000-000000000000",
+    "Group": "Custom",
+    "FriendlyName": "WeeklyDailyEMA",
+    "ShortName": null,
+    "TypeName": "cAlgo.Robots.WeeklyDailyEMA",
+    "AssemblyName": "Weekly-Daily-EMA, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "TimeZone": "UTC",
+    "IsOverlay": false,
+    "ScalePrecision": null,
+    "Levels": [],
+    "Video": null,
+    "Lines": [],
+    "Clouds": [],
+    "Parameters": [
+      {
+        "MinValue": 0.01,
+        "MaxValue": 1.7976931348623157E+308,
+        "Step": 0.1,
+        "DefaultValue": 1.0,
+        "ParameterType": "Double",
+        "PropertyName": "ExtVolume",
+        "FriendlyName": "Initial Quantity (Lots)",
+        "GroupName": "Money Management"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 40,
+        "ParameterType": "Integer",
+        "PropertyName": "ExtStopLoss",
+        "FriendlyName": "Stop Loss",
+        "GroupName": "Money Management"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 40,
+        "ParameterType": "Integer",
+        "PropertyName": "ExtTakeProfit",
+        "FriendlyName": "Take Profit",
+        "GroupName": "Money Management"
+      },
+      {
+        "DefaultValue": false,
+        "ParameterType": "Boolean",
+        "PropertyName": "ExtAllowPartialClose",
+        "FriendlyName": "Allow Positions partial close",
+        "GroupName": "Partial Close"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 15,
+        "ParameterType": "Integer",
+        "PropertyName": "ExtPartialCloseFirstDistance",
+        "FriendlyName": "Distance for first partial close",
+        "GroupName": "Partial Close"
+      },
+      {
+        "MinValue": -1.7976931348623157E+308,
+        "MaxValue": 1.7976931348623157E+308,
+        "Step": 0.1,
+        "DefaultValue": 0.4,
+        "ParameterType": "Double",
+        "PropertyName": "ExtPartialCloseFirstAmount",
+        "FriendlyName": "Size of first partial close",
+        "GroupName": "Partial Close"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 30,
+        "ParameterType": "Integer",
+        "PropertyName": "ExtPartialCloseSecondDistance",
+        "FriendlyName": "Distance for second partial close",
+        "GroupName": "Partial Close"
+      },
+      {
+        "MinValue": -1.7976931348623157E+308,
+        "MaxValue": 1.7976931348623157E+308,
+        "Step": 0.1,
+        "DefaultValue": 0.3,
+        "ParameterType": "Double",
+        "PropertyName": "ExtPartialCloseSecondAmout",
+        "FriendlyName": "Size of second partial close",
+        "GroupName": "Partial Close"
+      },
+      {
+        "DefaultValue": false,
+        "ParameterType": "Boolean",
+        "PropertyName": "ExtAllowTrailingStop",
+        "FriendlyName": "Allow Positions trailing stop",
+        "GroupName": "Trailing Stop"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 30,
+        "ParameterType": "Integer",
+        "PropertyName": "ExtTrailPoint",
+        "FriendlyName": "Trail point",
+        "GroupName": "Trailing Stop"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 7,
+        "ParameterType": "Integer",
+        "PropertyName": "TradingHourStart",
+        "FriendlyName": "Trading hour start",
+        "GroupName": "Trading Hours"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 19,
+        "ParameterType": "Integer",
+        "PropertyName": "TradingHourStop",
+        "FriendlyName": "Trading hour stop",
+        "GroupName": "Trading Hours"
+      },
+      {
+        "DefaultValue": "Close",
+        "ParameterType": "DataSeries",
+        "PropertyName": "RSI_Source",
+        "FriendlyName": "Source",
+        "GroupName": "RSI"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 14,
+        "ParameterType": "Integer",
+        "PropertyName": "RSI_Period",
+        "FriendlyName": "Periods",
+        "GroupName": "RSI"
+      }
+    ],
+    "Capabilities": [],
+    "CustomAttributes": [],
+    "Sets": []
+  }
+]
