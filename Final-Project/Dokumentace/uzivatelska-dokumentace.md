@@ -36,7 +36,7 @@ Algorimus spouštějte vždy na Medium timeframu.
 - [B1 Setup](#b1-setup)
 - [B2 Setup](#b2-setup)
 - [C Setup](#c-setup)
-- [D Setup](#c-setup)
+- [D Setup](#d-setup)
 
 ### A Setup 
 #### LONG
