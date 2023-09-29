@@ -1,4 +1,5 @@
-Final project
+# Weekly Daily EMA
+## AOS Final project
 - kB count (103 kB)
   - Robot
     - Weekly-Daily-EMA.cs (76 kB)
